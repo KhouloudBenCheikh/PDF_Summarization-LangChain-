@@ -23,4 +23,33 @@ def process_text(text):
     chunks = text_splitter.split_text(text)
 
     #load the Model
-    embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
+    embeddings = HuggingFaceBgeEmbeddings (model_name='sentence-transformers/all-MiniLM-L6-v2')
+
+    #Create a FAISS index from the text chunks using the embeddings
+    knwoledgeBase = FAISS.from_texts(chunks, embeddings)
+
+    return knwoledgeBase 
+
+def summarizer (pdf):
+    if pdf is not None:
+        pdf_reader = PdfReader(pdf)
+        text=""
+
+        #Extract text form each page of the text
+        for page in pdf_reader.pages:
+            text+= page.extract_text or ""
+
+        knowledgeBase = process_text(text)
+        
+        #Define the query for Summarization
+        query= "Summarize the content of the uploaded PdF file in 3 to 5 lines"
+
+        if query:
+            #searching similarity
+            docs=knowledgeBase.similarity_search(query)
+
+            #Specify the Model to use for generating the summary
+            OpenAIModel = "gpt-3.5-turbo-16k"
+            llm = ChatOpenAI(mode=OpenAIModel, temperature=0.1)
+
+            #load a question answering chain with the specific Model
