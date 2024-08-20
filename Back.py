@@ -53,3 +53,11 @@ def summarizer (pdf):
             llm = ChatOpenAI(mode=OpenAIModel, temperature=0.1)
 
             #load a question answering chain with the specific Model
+            chain = load_qa_chain(llm, chain_type='stuff')
+
+            with get_openai_callback() as cost:
+                response = chain.run(input_documents=docs, question=query)
+                print(cost)
+                return response
+            
+    
